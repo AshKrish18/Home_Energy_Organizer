@@ -4,7 +4,7 @@ import paho.mqtt.client as mqtt
 from datetime import datetime
 
 # --- DB Setup ---
-DB_PATH = "/Users/ashkrish18/Documents/Coding/Project/AI powered home energy optimizer/energy_data.db"
+DB_PATH = "/Users/ashkrish18/Documents/Coding/Project/Home_Energy_Organizer/energy_data.db" 
 conn = sqlite3.connect(DB_PATH, check_same_thread=False)
 cursor = conn.cursor()
 cursor.execute("""

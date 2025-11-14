@@ -2,6 +2,10 @@ from fastapi import FastAPI
 import sqlite3
 from typing import List, Dict
 from fastapi.middleware.cors import CORSMiddleware
+from ml_anomaly import detect_anomalies
+from ml_predict import predict_next_value, predict_next_hour_sum
+
+#uvicorn app:app --reload --port 8000 Use this to activate api
 
 app = FastAPI(title="Home Energy Optimizer API")
 
@@ -13,8 +17,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DB_PATH = "/Users/ashkrish18/Documents/Coding/Project/AI powered home energy optimizer/energy_data.db"  # adjust if needed
-
+DB_PATH = "/Users/ashkrish18/Documents/Coding/Project/Home_energy_organizer/energy_data.db"  # adjust if needed
 
 # Helper function to query DB
 def query_db(query: str, params: tuple = ()) -> List[Dict]:
@@ -102,3 +105,24 @@ def get_monthly_usage():
         LIMIT 6
     """)
     return {"monthly": rows[::-1]}
+
+@app.get("/anomalies")
+def get_anomaly_report():
+    devices = ["fridge", "washer", "ac", "lights"]
+    report = {}
+
+    for d in devices:
+        report[d] = detect_anomalies(d)
+
+    return {"anomalies": report}
+
+@app.get("/predict/next")
+def predict_next():
+    value, ts = predict_next_value()
+    return {"timestamp": ts, "predicted_power": value}
+
+
+@app.get("/predict/next_hour")
+def predict_hour():
+    prediction = predict_next_hour_sum()
+    return {"predicted_hourly_usage": prediction}

@@ -10,38 +10,47 @@
   <!-- Animated background -->
   <div class="background"></div>
 
-  <header>
+  <header class="glass">
     <h1>⚡ Home Energy Dashboard</h1>
+    <nav class="topnav">
+      <a href="#summary">Summary</a>
+      <a href="#charts">Trends</a>
+      <a href="#alerts">Alerts</a>
+      <a href="#devices">Devices</a>
+    </nav>
   </header>
 
   <main>
     <!-- Summary Cards -->
     <section class="cards">
-      <div class="card">
+      <div class="card glass">
         <h2>Total Consumption</h2>
         <p id="total">-- kWh</p>
       </div>
-      <div class="card">
+      <div class="card glass">
         <h2>Peak Device</h2>
         <p id="peak">--</p>
       </div>
-      <div class="card">
+      <div class="card glass">
         <h2>Cost Estimate</h2>
         <p id="cost">-- ₹</p>
       </div>
+      <div class="card glass">
+        <h2>Predicted Next Hour</h2>
+        <p id="prediction">-- kWh</p>
+      </div>
     </section>
 
-    <!-- Device Table -->
-    <section class="devices">
-      <section class="charts">
-  <h2>Energy Usage Trends</h2>
-  <canvas id="dailyChart"></canvas>
-  <canvas id="monthlyChart"></canvas>
-</section>
 
-<!-- Import Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-      <h2>Device Usage</h2>
+    <!-- AI Alerts Section -->
+    <section class="alerts glass">
+      <h2>⚠️ AI Anomaly Alerts</h2>
+      <ul id="alert-list"></ul>
+    </section>
+
+    <!-- Device Table Section -->
+    <section class="devices glass">
+      <h2>🧠 Device Live Usage</h2>
       <table>
         <thead>
           <tr>
@@ -51,12 +60,13 @@
           </tr>
         </thead>
         <tbody id="device-table">
-          <!-- Filled dynamically with JS -->
         </tbody>
       </table>
     </section>
   </main>
 
+  <!-- Import Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <footer>
     <p>Made with ⚡ AI Powered Home Energy Optimizer</p>
   </footer>

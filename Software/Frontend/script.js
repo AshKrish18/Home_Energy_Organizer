@@ -30,6 +30,28 @@ async function fetchTotalConsumption() {
   }
 }
 
+async function fetchAnomalies() {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/anomalies");
+    const result = await response.json();
+    return result.anomalies || {};
+  } catch (err) {
+    console.error("Error fetching anomalies:", err);
+    return {};
+  }
+}
+
+async function fetchPrediction() {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/predict/next_hour");
+    const result = await response.json();
+    return result.predicted_hourly_usage || 0;
+  } catch (err) {
+    console.error("Error fetching prediction:", err);
+    return 0;
+  }
+}
+
 async function updateDashboard() {
   const [data, total] = await Promise.all([fetchLatestData(), fetchTotalConsumption()]);
 
@@ -56,59 +78,55 @@ async function updateDashboard() {
     table.appendChild(row);
   });
 
+  const prediction = await fetchPrediction();
+  const predictionElem = document.getElementById("prediction");
+  if (predictionElem) {
+    predictionElem.textContent = (prediction / 1000).toFixed(2) + " kWh";
+  }
+
   // Cost estimate (₹7/kWh)
   const cost = (total / 1000) * 7;
   document.getElementById("cost").textContent = "₹" + cost.toFixed(2);
 }
-async function fetchDailyUsage() {
-  const res = await fetch("http://127.0.0.1:8000/usage/daily");
-  const data = await res.json();
-  return data.daily;
-}
 
-async function fetchMonthlyUsage() {
-  const res = await fetch("http://127.0.0.1:8000/usage/monthly");
-  const data = await res.json();
-  return data.monthly;
-}
+async function updateAlerts() {
+  const anomalies = await fetchAnomalies();
+  const alertList = document.getElementById("alert-list");
+  if (!alertList) return;
 
-async function renderCharts() {
-  const daily = await fetchDailyUsage();
-  const monthly = await fetchMonthlyUsage();
+  alertList.innerHTML = "";
 
-  // Daily chart
-  new Chart(document.getElementById("dailyChart"), {
-    type: "line",
-    data: {
-      labels: daily.map(d => d.day),
-      datasets: [{
-        label: "Daily Consumption (Wh)",
-        data: daily.map(d => d.total),
-        borderColor: "blue",
-        fill: false
-      }]
+  let hasAlerts = false;
+
+  for (const device in anomalies) {
+    const deviceAnoms = anomalies[device];
+    if (deviceAnoms.length > 0) {
+      hasAlerts = true;
+
+      deviceAnoms.forEach(a => {
+        const li = document.createElement("li");
+        const time = new Date(a.timestamp * 1000).toLocaleString();
+
+        li.innerHTML = `
+          <strong>${device.toUpperCase()}</strong> anomaly at ${time} —
+          ${a.power_w} W (z-score: ${a.z_score.toFixed(2)})
+        `;
+        alertList.appendChild(li);
+      });
     }
-  });
+  }
 
-  // Monthly chart
-  new Chart(document.getElementById("monthlyChart"), {
-    type: "bar",
-    data: {
-      labels: monthly.map(m => m.month),
-      datasets: [{
-        label: "Monthly Consumption (Wh)",
-        data: monthly.map(m => m.total),
-        backgroundColor: "orange"
-      }]
-    }
-  });
+  if (!hasAlerts) {
+    alertList.innerHTML = "<li>No anomalies detected 🎉</li>";
+  }
 }
 
 // Refresh every 5 seconds
-setInterval(updateDashboard, 5000);
+setInterval(() => {
+  updateDashboard();
+  updateAlerts();
+}, 5000);
 
 // First load
 updateDashboard();
-
-// Call once when page loads
-renderCharts();
+updateAlerts();
